@@ -156,4 +156,32 @@ router.get("/google/redirect", passport.authenticate("google"), (req, res) => {
   );
 });
 
+router.get(
+  "/github",
+  passport.authenticate("github", {
+    scope: ["user:email"],
+  })
+);
+
+router.get("/github/redirect", passport.authenticate("github"), (req, res) => {
+  const payload = {
+    user: {
+      id: req.user._id,
+    },
+  };
+  jwt.sign(
+    payload,
+    config.get("jwtSecret"),
+    { expiresIn: 3600 },
+    (err, token) => {
+      if (err) throw err;
+      res.cookie("auth", token);
+      res.writeHead(302, {
+        Location: "http://localhost:3000/login",
+      });
+      res.end();
+    }
+  );
+});
+
 module.exports = router;

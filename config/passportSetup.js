@@ -1,5 +1,6 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20");
+const GitHubStrategy = require("passport-github2");
 const config = require("config");
 const User = require("../models/User");
 
@@ -26,6 +27,32 @@ passport.use(
           new User({
             username: profile.displayName,
             googleId: profile.id,
+          })
+            .save()
+            .then((newUser) => {
+              done(null, newUser);
+            });
+        }
+      });
+    }
+  )
+);
+
+passport.use(
+  new GitHubStrategy(
+    {
+      clientID: config.get("clientId_hub"),
+      clientSecret: config.get("clientSecret_hub"),
+      callbackURL: "/api/auth/github/redirect",
+    },
+    function (accessToken, refreshToken, profile, done) {
+      User.findOne({ githubId: profile.id }).then((user) => {
+        if (user) {
+          done(null, user);
+        } else {
+          new User({
+            username: profile.displayName,
+            githubId: profile.id,
           })
             .save()
             .then((newUser) => {

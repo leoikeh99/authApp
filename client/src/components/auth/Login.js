@@ -180,7 +180,9 @@ const Login = ({ auth, error, loader, token, history }) => {
             </a>
           </li>
           <li>
-            <img src={Github} alt="" />
+            <a href="http://localhost:5000/api/auth/github">
+              <img src={Github} alt="" />
+            </a>
           </li>
         </ul>
 

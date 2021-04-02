@@ -20,6 +20,9 @@ const userSchema = mongoose.Schema(
     googleId: {
       type: String,
     },
+    githubId: {
+      type: String,
+    },
   },
   {
     timestamps: true,
