@@ -1,5 +1,7 @@
 {
     "mongoURI": "mongodb://localhost:27017/authApp",
-    "jwtSecret": "secret"
+    "jwtSecret": "secret",
+    "clientId_g":"133101340427-86j1olo5a031ropp74st9q7eg7s8rpok.apps.googleusercontent.com",
+    "clientSecret_g":"csIZtPtZNFOOB2k_DLkLD5jN"
   }
   

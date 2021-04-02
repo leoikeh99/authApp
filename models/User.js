@@ -8,15 +8,17 @@ const userSchema = mongoose.Schema(
     },
     email: {
       type: String,
+      default: null,
     },
     password: {
       type: String,
     },
-    google: {
-      id: { type: String },
-      token: { type: String },
-      email: { type: String },
-      name: { type: String },
+    bio: {
+      type: String,
+      default: "",
+    },
+    googleId: {
+      type: String,
     },
   },
   {

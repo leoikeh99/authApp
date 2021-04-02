@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const { check, validationResult } = require("express-validator");
 const config = require("config");
 const validator = require("email-validator");
+const passport = require("passport");
 
 const User = require("../models/User");
 
@@ -126,5 +127,33 @@ router.post(
     }
   }
 );
+
+router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile"],
+  })
+);
+
+router.get("/google/redirect", passport.authenticate("google"), (req, res) => {
+  const payload = {
+    user: {
+      id: req.user._id,
+    },
+  };
+  jwt.sign(
+    payload,
+    config.get("jwtSecret"),
+    { expiresIn: 3600 },
+    (err, token) => {
+      if (err) throw err;
+      res.cookie("auth", token);
+      res.writeHead(302, {
+        Location: "http://localhost:3000/login",
+      });
+      res.end();
+    }
+  );
+});
 
 module.exports = router;

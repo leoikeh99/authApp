@@ -1,27 +1,37 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import logo from "../../images/logo.svg";
 import Github from "../../images/Github.svg";
 import Google from "../../images/Google.svg";
 import TextField from "@material-ui/core/TextField";
 import InputAdornment from "@material-ui/core/InputAdornment";
+import { connect } from "react-redux";
+import { auth } from "../../actions/authActions";
 import {
   Email,
   Visibility,
   VisibilityOff,
-  AccountCircle,
   ExitToApp,
 } from "@material-ui/icons";
 import IconButton from "@material-ui/core/IconButton";
-import Button from "@material-ui/core/Button";
+import { CircularProgress, Button } from "@material-ui/core";
 import Link from "@material-ui/core/Link";
+import Alert from "@material-ui/lab/Alert";
+import Snackbar from "@material-ui/core/Snackbar";
+import emailValidator from "email-validator";
+import { getCookie } from "../../functions/otherFunctions";
+import { useCookies } from "react-cookie";
 
-const Login = () => {
+const Login = ({ auth, error, loader, token, history }) => {
+  const [validate, setValidate] = useState(null);
+  const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
     password: "",
     showPassword: false,
   });
+  const [cookies, setCookie] = useCookies(["auth"]);
 
   const handleChange = (prop) => (event) => {
+    setValidate(null);
     setValues({ ...values, [prop]: event.target.value });
   };
 
@@ -32,6 +42,49 @@ const Login = () => {
   const handleMouseDownPassword = (event) => {
     event.preventDefault();
   };
+
+  useEffect(() => {
+    if (error) {
+      setOpen(true);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (token) {
+      history.push("/");
+    }
+    //eslint-disable-next-line
+  }, [token, history]);
+
+  useEffect(() => {
+    if (cookies.auth) {
+      localStorage.setItem("token", cookies.auth);
+      history.push("/");
+    }
+  }, [cookies, history]);
+
+  const submit = () => {
+    setValidate(null);
+    if (!emailValidator.validate(values.email)) {
+      setValidate({ type: 1, msg: "Invalid email" });
+    } else {
+      if (values.password.trim() === "") {
+        setValidate({ type: 2, msg: "Password is required" });
+      } else {
+        const data = { email: values.email, password: values.password };
+        auth("login", data);
+      }
+    }
+  };
+
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpen(false);
+  };
+
   return (
     <div className="login">
       <img
@@ -47,13 +100,21 @@ const Login = () => {
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Fugit quasi
         rerum, eos nobis optio minus aspernatur.
       </p>
-
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="error">
+          {error && error.msg}
+        </Alert>
+      </Snackbar>
       <form action="">
         <TextField
           id="outlined-search"
           label="Email"
           type="email"
           variant="outlined"
+          value={values.email}
+          onChange={handleChange("email")}
+          error={validate && validate.type == 1 ? true : false}
+          helperText={validate && validate.type == 1 && validate.msg}
           fullWidth
           InputProps={{
             endAdornment: (
@@ -69,6 +130,8 @@ const Login = () => {
           id="outlined-adornment-password"
           type={values.showPassword ? "text" : "password"}
           value={values.password}
+          error={validate && validate.type == 2 ? true : false}
+          helperText={validate && validate.type == 2 && validate.msg}
           onChange={handleChange("password")}
           label="Password"
           variant="outlined"
@@ -93,7 +156,15 @@ const Login = () => {
         <Button
           variant="contained"
           color="primary"
-          startIcon={<ExitToApp />}
+          disabled={loader}
+          startIcon={
+            !loader ? (
+              <ExitToApp />
+            ) : (
+              <CircularProgress size={22} color="inherit" />
+            )
+          }
+          onClick={submit}
           fullWidth
         >
           Login
@@ -104,7 +175,9 @@ const Login = () => {
         </p>
         <ul>
           <li>
-            <img src={Google} alt="" />
+            <a href="http://localhost:5000/api/auth/google">
+              <img src={Google} alt="" />
+            </a>
           </li>
           <li>
             <img src={Github} alt="" />
@@ -119,4 +192,10 @@ const Login = () => {
   );
 };
 
-export default Login;
+const mapStateToProps = (state) => ({
+  error: state.auth.error,
+  loader: state.auth.loader,
+  token: state.auth.token,
+});
+
+export default connect(mapStateToProps, { auth })(Login);
